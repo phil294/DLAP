@@ -45,13 +45,13 @@ export async function destroyAudio(interaction) {
   }
 }
 export async function stopBot(bot, interaction) {
-  const statusEmbed = new EmbedBuilder()
-    .setAuthor({ name: bot.user.username, iconURL: bot.user.avatarURL() })
-    .setDescription(`That's all folks! Powering down ${bot.user.username}...`)
-    .setColor('#0066ff');
-  const channel = bot.channels.cache.get(statusChannel);
-  if (!channel) return console.error('The status channel does not exist! Skipping.');
-  await channel.send({ embeds: [statusEmbed] });
+  // const statusEmbed = new EmbedBuilder()
+    // .setAuthor({ name: bot.user.username, iconURL: bot.user.avatarURL() })
+    // .setDescription(`That's all folks! Powering down ${bot.user.username}...`)
+    // .setColor('#0066ff');
+  // const channel = bot.channels.cache.get(statusChannel);
+  // if (!channel) return console.error('The status channel does not exist! Skipping.');
+  // await channel.send({ embeds: [statusEmbed] });
 
   console.log(`Powering off ${bot.user.username}...`);
   await destroyAudio(interaction);

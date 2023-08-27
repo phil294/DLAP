@@ -18,14 +18,16 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  ***************************************************************************/
-import { createAudioResource } from '@discordjs/voice';
-import { parseFile } from 'music-metadata';
-import { readdirSync, readFileSync, writeFile } from 'node:fs';
-import { EmbedBuilder } from 'discord.js';
-import { player } from './VoiceInitialization.js';
-import { audioState, files } from './AudioControl.js';
-import { integer } from '../Commands/play.js';
-const { statusChannel, txtFile } = JSON.parse(readFileSync('./config.json', 'utf-8'));
+import { createAudioResource } from "@discordjs/voice";
+import { parseFile } from "music-metadata";
+import { readdirSync, readFileSync, writeFile } from "node:fs";
+import { EmbedBuilder } from "discord.js";
+import { player } from "./VoiceInitialization.js";
+import { audioState, files } from "./AudioControl.js";
+import { integer } from "../Commands/play.js";
+const { statusChannel, txtFile, presenceActivity, activityType } = JSON.parse(
+  readFileSync("./config.json", "utf-8"),
+);
 
 let fileData;
 
@@ -40,10 +42,17 @@ export let audioYear;
 export let audioAlbum;
 export let duration;
 
-const inputFiles = readdirSync('music');
+const inputFiles = readdirSync("music");
 export async function playAudio(bot) {
-  const resource = createAudioResource('music/' + audio);
+  const resource = createAudioResource("music/" + audio, {
+    inlineVolume: true
+  });
+  resource.volume.setVolume(0.3)
+
+  // player.setVolume(0.1)
+
   player.play(resource);
+
 
   console.log(`Now playing: ${audio}`);
 
@@ -51,8 +60,11 @@ export async function playAudio(bot) {
 
   const audioFile = audio;
 
+  let durationSec = 0
+
   try {
-    const { common, format } = await parseFile('music/' + audio);
+    const { common, format } = await parseFile("music/" + audio);
+    durationSec = format.duration
     metadataEmpty = false;
     if (common.title && common.artist && common.year && common.album) {
       audioTitle = common.title;
@@ -67,58 +79,69 @@ export async function playAudio(bot) {
     console.error(e);
   }
 
-  audio = audio.split('.').slice(0, -1).join('.');
+  audio = audio.split(".").slice(0, -1).join(".");
 
   if (txtFile) {
     fileData = `Now Playing: ${audio}`;
-    writeFile('./now-playing.txt', fileData, (err) => {
-      if (err) { console.log(err); }
+    writeFile("./now-playing.txt", fileData, (err) => {
+      if (err) console.log(err);
     });
   }
 
-  const statusEmbed = new EmbedBuilder();
-  if (metadataEmpty) {
-    statusEmbed.setTitle('Now Playing');
-    statusEmbed.addFields(
-      { name: 'Title', value: `${audio}` },
-      { name: 'Duration', value: `${duration}` }
-    );
-    statusEmbed.setColor('#0066ff');
-  } else {
-    statusEmbed.setTitle('Now Playing');
-    statusEmbed.addFields(
-      { name: 'Title', value: `${audioTitle}`, inline: true },
-      { name: 'Artist', value: `${audioArtist}`, inline: true },
-      { name: 'Year', value: `${audioYear}` },
-      { name: 'Duration', value: `${duration}` }
-    );
-    statusEmbed.setFooter({ text: `Album: ${audioAlbum}\nFilename: ${audioFile}` });
-    statusEmbed.setColor('#0066ff');
-  }
-  const channel = bot.channels.cache.get(statusChannel);
-  if (!channel) return console.error('The status channel does not exist! Skipping.');
-  return await channel.send({ embeds: [statusEmbed] });
+  // const statusEmbed = new EmbedBuilder();
+  // if (metadataEmpty) {
+  // statusEmbed.setTitle('Now Playing');
+  // statusEmbed.addFields(
+  // { name: 'Title', value: `${audio}` },
+  // { name: 'Duration', value: `${duration}` }
+  // );
+  // statusEmbed.setColor('#0066ff');
+  // } else {
+  // statusEmbed.setTitle('Now Playing');
+  // statusEmbed.addFields(
+  // { name: 'Title', value: `${audioTitle}`, inline: true },
+  // { name: 'Artist', value: `${audioArtist}`, inline: true },
+  // { name: 'Year', value: `${audioYear}` },
+  // { name: 'Duration', value: `${duration}` }
+  // );
+  // statusEmbed.setFooter({ text: `Album: ${audioAlbum}\nFilename: ${audioFile}` });
+  // statusEmbed.setColor('#0066ff');
+  // }
+  // const channel = bot.channels.cache.get(statusChannel);
+  // if (!channel) return console.error('The status channel does not exist! Skipping.');
+  // return await channel.send({ embeds: [statusEmbed] });
+
+   if(durationSec > 5) { // rate limiting
+    bot.user.setPresence({
+      activities: [{
+        // ${presenceActivity} —
+        name: `${audio} (${duration})`,
+        type: activityType
+      }],
+      status: 'online'
+    });
+   }
 }
 
 export function updatePlaylist(option) {
   switch (option) {
-    case 'next':
+    case "next":
       currentTrack++;
       audio = files[currentTrack];
       break;
-    case 'back':
+    case "back":
       currentTrack--;
       audio = files[currentTrack];
       break;
-    case 'reset':
+    case "reset":
       currentTrack = 0;
       audio = files[currentTrack];
       break;
-    case 'input':
+    case "input":
       audio = inputFiles[integer];
       break;
-    case 'stop':
-      audio = 'Not Playing';
+    case "stop":
+      audio = "Not Playing";
       break;
   }
 }

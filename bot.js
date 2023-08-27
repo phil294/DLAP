@@ -59,15 +59,15 @@ bot.once(Events.ClientReady, async() => {
   const activity = bot.presence.activities[0];
   console.log(`Updated bot presence to "${activity.name}"`);
 
-  // Send bots' status to channel
-  const readyEmbed = new EmbedBuilder()
-    .setAuthor({ name: bot.user.username, iconURL: bot.user.avatarURL() })
-    .setDescription('Starting bot...')
-    .setColor('#0066ff');
+  // // Send bots' status to channel
+  // const readyEmbed = new EmbedBuilder()
+    // .setAuthor({ name: bot.user.username, iconURL: bot.user.avatarURL() })
+    // .setDescription('Starting bot...')
+    // .setColor('#0066ff');
 
-  const channel = bot.channels.cache.get(statusChannel);
-  if (!channel) return console.error('The status channel does not exist! Skipping.');
-  await channel.send({ embeds: [readyEmbed] });
+  // const channel = bot.channels.cache.get(statusChannel);
+  // if (!channel) return console.error('The status channel does not exist! Skipping.');
+  // await channel.send({ embeds: [readyEmbed] });
 
   return await voiceInit(bot);
 });
